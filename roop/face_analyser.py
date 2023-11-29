@@ -42,13 +42,12 @@ def get_many_faces(frame: Frame) -> Optional[List[Face]]:
     except ValueError:
         return None
 
-
+# if hasattr(face, 'normed_embedding') and hasattr(reference_face, 'normed_embedding'):
+#     distance = numpy.sum(numpy.square(face.normed_embedding - reference_face.normed_embedding))
+#     if distance < roop.globals.similar_face_distance:
 def find_similar_face(frame: Frame, reference_face: Face) -> Optional[Face]:
     many_faces = get_many_faces(frame)
     if many_faces:
         for face in many_faces:
             return face
-    # if hasattr(face, 'normed_embedding') and hasattr(reference_face, 'normed_embedding'):
-    #     distance = numpy.sum(numpy.square(face.normed_embedding - reference_face.normed_embedding))
-    #     if distance < roop.globals.similar_face_distance:
     return None
