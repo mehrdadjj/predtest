@@ -92,12 +92,18 @@ def suggest_execution_threads() -> int:
 
 
 def limit_resources() -> None:
-    # prevent tensorflow memory leak
-    gpus = tensorflow.config.experimental.list_physical_devices('GPU')
-    for gpu in gpus:
-        tensorflow.config.experimental.set_virtual_device_configuration(gpu, [
-            tensorflow.config.experimental.VirtualDeviceConfiguration(memory_limit=1024)
-        ])
+    try:
+        tpu = tensorflow.distribute.cluster_resolver.TPUClusterResolver()  # TPU detection
+        print('Running on TPU ', tpu.cluster_spec().as_dict()['worker'])
+        tensorflow.config.experimental_connect_to_cluster(tpu)
+        tensorflow.tpu.experimental.initialize_tpu_system(tpu)
+    except ValueError:
+        # prevent tensorflow memory leak
+        gpus = tensorflow.config.experimental.list_physical_devices('GPU')
+        for gpu in gpus:
+            tensorflow.config.experimental.set_virtual_device_configuration(gpu, [
+                tensorflow.config.experimental.VirtualDeviceConfiguration()
+            ])
     # limit memory usage
     if roop.globals.max_memory:
         memory = roop.globals.max_memory * 1024 ** 3
