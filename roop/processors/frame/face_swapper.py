@@ -77,18 +77,19 @@ def process_frame(source_face: Face, reference_face: Face, temp_frame: Frame) ->
 def process_frames(source_path: str, temp_frame_paths: List[str], update: Callable[[], None]) -> None:
     source_face = get_one_face(cv2.imread(source_path))
     reference_face = None if roop.globals.many_faces else get_face_reference()
-    def process_frame_parallel(temp_frame_path):
+    def process_frame_parallel(temp_frame_path:str):
         temp_frame = cv2.imread(temp_frame_path)
         result = process_frame(source_face, reference_face, temp_frame)
         cv2.imwrite(temp_frame_path, result)
         if update:
             update()
     chunked_paths = [temp_frame_paths[i:i+8] for i in range(0, len(temp_frame_paths), 8)]
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        # Submit each chunk of paths to the executor
-        futures = [executor.submit(process_frame_parallel, path) for path in chunked_paths]
-        # Wait for all threads to complete
-        concurrent.futures.wait(futures)    
+    for chunk in chunked_paths:
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            # Submit each chunk of paths to the executor
+            futures = [executor.submit(process_frame_parallel, path) for path in chunk]
+            # Wait for all threads to complete
+            concurrent.futures.wait(futures)    
     # for temp_frame_path in temp_frame_paths:
     #     temp_frame = cv2.imread(temp_frame_path)
     #     result = process_frame(source_face, reference_face, temp_frame)
